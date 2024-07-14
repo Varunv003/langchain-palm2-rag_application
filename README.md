@@ -1,4 +1,4 @@
-# Langchain Retrieval System
+# DocChat: Langchain Retrieval System
 
 This Streamlit application implements a Langchain-based retrieval system for processing PDF documents and conducting conversational retrieval using Langchain's capabilities.
 
