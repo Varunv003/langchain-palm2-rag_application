@@ -47,7 +47,7 @@ def main():
     # Sidebar 
     with st.sidebar:
         st.title("Upload Your Data")
-        pdf_docs = st.file_uploader("Upload your PDF files and click on the Submit and Process Button", accept_multiple_files=True)
+        pdf_docs = st.file_uploader("Upload your PDF files and click on the Submit and Process Button", accept_multiple_files=False)
 
         if st.button("Submit and Process"):
             if pdf_docs:
