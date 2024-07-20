@@ -47,13 +47,13 @@ def main():
     # Sidebar 
     with st.sidebar:
         st.title("Upload Your Data")
-        pdf_docs = st.file_uploader("Upload your PDF files and click on the Submit and Process Button", accept_multiple_files=False)
+        pdf_docs = st.file_uploader("Upload your PDF files", accept_multiple_files=True)
 
         if st.button("Submit and Process"):
             if pdf_docs:
                 with st.spinner("Processing...."):
-                    vector_stores = process_in_parallel(pdf_docs)
-                    st.session_state.conversation = get_conversationalchain(vector_stores[0])
+                    vector_store = process_in_parallel(pdf_docs)
+                    st.session_state.conversation = get_conversationalchain(vector_store)
                     st.success("Processing Complete")
             else:
                 st.warning("Please upload PDF files.")

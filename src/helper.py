@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from PyPDF2 import PdfReader
+import pdfplumber
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import GooglePalmEmbeddings
@@ -17,18 +17,15 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 os.environ['GOOGLE_API_KEY'] = GOOGLE_API_KEY
 
-
-
 def get_pdf_text(pdf_doc):
     start_time = time.time()
     logging.info("Starting PDF text extraction")
     text = ""
-    pdf_reader = PdfReader(pdf_doc)
-    for page in pdf_reader.pages:
-        text += page.extract_text()
+    with pdfplumber.open(pdf_doc) as pdf:
+        for page in pdf.pages:
+            text += page.extract_text()
     logging.info(f"Completed PDF text extraction in {time.time() - start_time} seconds")
     return text
-
 
 def get_text_chunks(text):
     start_time = time.time()
@@ -37,7 +34,6 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     logging.info(f"Completed text chunking in {time.time() - start_time} seconds")
     return chunks
-
 
 def get_vector_store(text_chunks):
     start_time = time.time()
@@ -61,10 +57,10 @@ def process_in_parallel(pdf_docs):
         text_futures = [executor.submit(get_pdf_text, pdf_doc) for pdf_doc in pdf_docs]
         texts = [future.result() for future in text_futures]
 
-        chunks_futures = [executor.submit(get_text_chunks, text) for text in texts]
-        chunks = [future.result() for future in chunks_futures]
+        all_chunks = []
+        for text in texts:
+            chunks = get_text_chunks(text)
+            all_chunks.extend(chunks)
 
-        vector_store_futures = [executor.submit(get_vector_store, chunk) for chunk in chunks]
-        vector_stores = [future.result() for future in vector_store_futures]
-
-    return vector_stores
+        vector_store = get_vector_store(all_chunks)
+    return vector_store
