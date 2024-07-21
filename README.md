@@ -2,6 +2,9 @@
 
 This Streamlit application implements a Langchain-based retrieval system for processing PDF documents and conducting conversational retrieval using Langchain's capabilities.
 
+![LangChain Retrieval Generation](readme_img_1.png)
+![RAG Streamlit APP](readme_img_2.png)
+
 ## Overview
 
 The application allows users to upload PDF files, extract text, split it into chunks, generate embeddings using Google Palm embeddings, and create a conversational retrieval chain. Users can then ask questions related to the processed PDF content and receive responses based on the conversational chain set up.
