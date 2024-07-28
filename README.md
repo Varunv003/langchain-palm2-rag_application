@@ -3,7 +3,7 @@
 This Streamlit application implements a Langchain-based retrieval system for processing PDF documents and conducting conversational retrieval using Langchain's capabilities.
 
 ## RAG Architecture
-![RAG Streamlit APP](Rag Architecture.jpg)
+![RAG Streamlit APP](Rag_Architecture.jpg)
 
 ## Streamlit UI
 ![LangChain Retrieval Generation](readme_img_1.png)
