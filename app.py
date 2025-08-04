@@ -1,62 +1,70 @@
 import streamlit as st
-from src.helper import process_in_parallel, get_conversationalchain
+import requests
 
-def main():
-    st.set_page_config(page_title="Langchain Retrieval System", page_icon=":book:")
-    st.title("Langchain Retrieval System")
+FASTAPI_URL = "http://backend:8000"
 
-    # Initialize session state
-    if "conversation" not in st.session_state:
-        st.session_state.conversation = None
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+st.set_page_config(page_title="Langchain Retrieval System", page_icon="📚")
+st.title("📚 Langchain Retrieval System")
 
-    # Chat history
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+# Session state for chat
+if "conversation_ready" not in st.session_state:
+    st.session_state.conversation_ready = False
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-    # User input
-    user_question = st.chat_input("Ask a question from the PDF files")
-    if user_question:
-        st.session_state.messages.append({"role": "user", "content": user_question})
-        with st.chat_message("user"):
-            st.markdown(user_question)
+# Display chat history
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-        if st.session_state.conversation:
-            response = st.session_state.conversation.invoke({'question': user_question})
-            chat_history = response['chat_history']
+# Chat input
+user_input = st.chat_input("Ask a question from the PDF files")
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+        st.markdown(user_input)
 
-            # Convert chat history to a list of dictionaries
-            formatted_chat_history = []
-            for message in chat_history:
-                if hasattr(message, 'content'):
-                    role = 'user' if message.__class__.__name__ == 'HumanMessage' else 'assistant'
-                    formatted_chat_history.append({"role": role, "content": message.content})
-
-            st.session_state.messages = formatted_chat_history
-
-            # Bot's Response
-            if formatted_chat_history:
-                with st.chat_message("assistant"):
-                    st.markdown(formatted_chat_history[-1]['content'])
-        else:
-            with st.chat_message("assistant"):
-                st.markdown("Please upload and process your PDF files first.")
-
-    # Sidebar 
-    with st.sidebar:
-        st.title("Upload Your Data")
-        pdf_docs = st.file_uploader("Upload your PDF files", accept_multiple_files=True)
-
-        if st.button("Submit and Process"):
-            if pdf_docs:
-                with st.spinner("Processing...."):
-                    vector_store = process_in_parallel(pdf_docs)
-                    st.session_state.conversation = get_conversationalchain(vector_store)
-                    st.success("Processing Complete")
+    if st.session_state.conversation_ready:
+        try:
+            response = requests.post(
+                f"{FASTAPI_URL}/chat/",
+                json={"question": user_input},
+                timeout=30
+            )
+            if response.status_code == 200:
+                answer = response.json()["answer"]
             else:
-                st.warning("Please upload PDF files.")
+                answer = f"❌ Error: {response.json().get('detail', 'Unknown error')}"
+        except Exception as e:
+            answer = f"🚫 Failed to connect to backend: {e}"
 
-if __name__ == "__main__":
-    main()
+        st.session_state.messages.append({"role": "assistant", "content": answer})
+        with st.chat_message("assistant"):
+            st.markdown(answer)
+    else:
+        with st.chat_message("assistant"):
+            st.markdown("⚠️ Please upload and process PDF files from the sidebar first.")
+
+# Sidebar for uploading PDFs
+with st.sidebar:
+    st.title("Upload Your PDF Data")
+    uploaded_files = st.file_uploader("Upload PDF files", type=["pdf"], accept_multiple_files=True)
+
+    if st.button("Submit and Process"):
+        if not uploaded_files:
+            st.warning("Please upload at least one PDF file.")
+        else:
+            with st.spinner("Processing your documents..."):
+                try:
+                    files = [("files", (file.name, file, "application/pdf")) for file in uploaded_files]
+                    response = requests.post(f"{FASTAPI_URL}/process/", files=files, timeout=60)
+
+                    if response.status_code == 200 and response.json().get("status") == "success":
+                        st.success("PDFs processed successfully.")
+                        st.session_state.conversation_ready = True
+                    else:
+                        st.error("❌ Error during processing: " + response.json().get("message", "Unknown error"))
+                        st.session_state.conversation_ready = False
+                except Exception as e:
+                    st.error(f"🚫 Failed to connect to backend: {e}")
+                    st.session_state.conversation_ready = False

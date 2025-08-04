@@ -13,74 +13,92 @@ This Streamlit application implements a Langchain-based retrieval system for pro
 
 ## Overview
 
-The application allows users to upload PDF files, extract text, split it into chunks, generate embeddings using Google Palm embeddings, and create a conversational retrieval chain. Users can then ask questions related to the processed PDF content and receive responses based on the conversational chain set up.
+DocChat is a Langchain-based retrieval system that processes PDF documents and creates a conversational retrieval chain. It leverages multiple technologies to extract text, generate embeddings, and enable chat-based querying over processed content.
 
-### Key Technologies Used
+### Tech Stack
 
-- **Langchain**: A library for natural language processing tasks, including text splitting and conversational retrieval.
-- **Google Palm Embeddings**: Embeddings used for semantic similarity and text representation.
-- **FAISS (Facebook AI Similarity Search)**: An efficient library for similarity search and clustering of dense vectors.
+- **FastAPI** – Serves as the backend API for processing PDFs and handling chat requests.
+- **Streamlit** – Provides the frontend user interface for uploading PDFs and interacting with the conversational system.
+- **Langchain** – A core library for NLP tasks such as text splitting and conversational retrieval.
+- **Google Palm & Google Generative Language** – Used for generating embeddings.
+- **FAISS** – Facebook AI Similarity Search used for efficient similarity search over embeddings.
+- **PyMuPDF (fitz)** – Extracts text from PDFs.
+- **Docker & Docker Compose** – Containerizes and orchestrates the backend and frontend applications.
+- **Python-dotenv** – Loads environment variables (e.g. API keys) from a `.env` file.
 
 ## Project Setup
 
 ### Prerequisites
 
-1. **Python Environment**: Make sure you have Python 3.x installed.
-   
-2. **Environment Variables**: Create a `.env` file in the project root directory with the following content:
-     GOOGLE_API_KEY=your_google_api_key_here
-     Replace `your_google_api_key_here` with your actual Google API key.
+1. **Python Environment**: Python 3.x is required.
+2. **Environment Variables**: Create a `.env` file in the project root with the content:
+   ```
+   GOOGLE_API_KEY=your_google_api_key_here
+   ```
+   Replace `your_google_api_key_here` with your actual Google API key.
 
-### Installation
+### Installation (Local Setup)
 
-1. **Clone the Repository**: Clone this repository to your local machine:
-```bash
-git clone https://github.com/Varunv003/langchain-palm2-rag_application
-```
-2. **Set Up Virtual Environment**: It's recommended to use a virtual environment to manage dependencies:
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Varunv003/langchain-palm2-rag_application
+   ```
+2. **Set Up Virtual Environment**:
+   ```bash
+   python -m venv venv
+   # On Windows:
+   .\venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Initialize Folder Structure** (if needed):
+   ```bash
+   python template.py
+   ```
+5. **Running the Streamlit App (Frontend)**:
+   ```bash
+   streamlit run app.py
+   ```
+   The application will be available at [http://localhost:8501](http://localhost:8501).
+6. **Running the FastAPI App (Backend)**:
+   ```bash
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+   The backend API will be available at [http://localhost:8000](http://localhost:8000).
 
-```bash
+## Running with Docker
 
-python -m venv venv
-# On Windows: .\venv\Scripts\activate
-# On macOS/Linux: source venv/bin/activate
-```
-3. **Install Dependencies**: Install required Python packages using pip:
+This project includes Dockerfiles for both the FastAPI backend and the Streamlit frontend. Docker Compose is used to orchestrate both services.
 
-```bash
+### Building and Running via Docker Compose
 
-pip install -r requirements.txt
-```
-4. **Template Structure**: To set up the initial folder structure of the project, run:
+1. **Ensure Docker Desktop is Running.**
+2. **From the project root (where the `docker-compose.yml` is located), run:**
+   ```bash
+   docker-compose up --build
+   ```
+3. **Services**:
+   - **Backend (FastAPI)** will be available at [http://localhost:8000](http://localhost:8000).
+   - **Frontend (Streamlit)** will be available at [http://localhost:8501](http://localhost:8501).
 
-```bash
+### Docker Compose File Structure
 
-python template.py
-# This command will create necessary directories and files based on your project needs.
-```
+Your `docker-compose.yml` defines two services:
+- **backend**: Built using `Dockerfile.backend` and exposing port 8000.
+- **frontend**: Built using `Dockerfile.frontend` and exposing port 8501, with a dependency on the backend service.
 
-5. **Running the Application**
-To run the Streamlit application:
+## Usage
 
-```bash
+- **Upload PDFs**: Use the sidebar in the Streamlit interface to upload PDF files.
+- **Process Documents**: Click "Submit and Process" to extract text, generate embeddings, and initialize the conversational chain.
+- **Chat**: Ask questions related to the processed PDFs through the chat interface. The backend retrieves and forms responses using the Langchain conversational chain.
 
-streamlit run app.py
-# The application will start, and you can access it in your web browser at http://localhost:8501.
-```
+## Future Improvements
 
-### File Structure
-- **app.py**: Main Streamlit application code for uploading PDFs, processing them, and managing user interactions.
-- **helper.py**: Contains helper functions for PDF text extraction, text chunking, FAISS vector store creation, and conversational chain setup.
-- **template.py**: Script to initialize the folder structure and create necessary directories/files for the project.
-.env: Environment variable file for storing sensitive data like API keys.
-### Usage
-- Upload PDF Files: Use the "Upload Your Data" sidebar to upload one or more PDF files.
-- Process PDFs: Click "Submit and Process" to extract text, generate embeddings, and set up a conversational retrieval chain.
-- Ask Questions: Enter questions related to the uploaded PDF content in the text input field.
-- View Responses: Responses generated by the Langchain conversational model will be displayed in the main interface.
-- Logging: Logging is implemented to capture key steps and timings during PDF text extraction, text chunking, vector store creation, and conversational chain setup. Logs are displayed in the console or terminal where the application is run.
-
-### Future Improvements
-- Enhance error handling and user feedback during file upload and processing.
-- Improve scalability and performance optimizations for handling larger PDF documents.
-- Integrate additional AI models or refine existing models for better conversational responses.
+- Enhance error handling and user feedback.
+- Optimize scalability and performance for larger documents.
+- Integrate additional AI models or refine existing conversational models for improved responses.
